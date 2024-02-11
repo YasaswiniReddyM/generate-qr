@@ -3,7 +3,7 @@ import validator from 'validator';
 import qr from 'qr-image';
 import swaggerUI from 'swagger-ui-express';
 import swaggerSpec from './swagger-config.js';
-import mongoose from 'mongoose';
+import mongoose from './dist/mongoose';
 import axios from 'axios';
 import cors from 'cors';
 
