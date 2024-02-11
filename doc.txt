@@ -1,0 +1,447 @@
+import express from 'express';
+import validator from 'validator';
+import qr from 'qr-image';
+import swaggerUI from 'swagger-ui-express';
+import swaggerSpec from './swagger-config.js';
+import { Firestore } from '@google-cloud/firestore';
+
+const app = express();
+const port = 5000;
+
+// Initialize Firestore
+const firestore = new Firestore();
+const qrCollection = firestore.collection('qr-codes');
+
+app.use(express.json());
+
+// Endpoint for generating QR code and saving URL (POST request)
+/**
+ * @swagger
+ * /generate-qr:
+ *   post:
+ *     summary: Generate QR code and save URL
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: The URL for which to generate the QR code
+ *     responses:
+ *       200:
+ *         description: QR code generated and URL saved successfully
+ *       400:
+ *         description: Invalid URL provided
+ *       500:
+ *         description: Internal Server Error
+ */
+app.post('/generate-qr', async (req, res) => {
+  const { url } = req.body;
+
+  try {
+    // Validate URL using validator
+    if (!validator.isURL(url)) {
+      return res.status(400).json({ error: 'Invalid URL' });
+    }
+
+    // Save data to Firestore
+    await qrCollection.add({ url, timestamp: new Date() });
+
+    res.json({ success: true, message: 'QR code generated and URL saved!' });
+  } catch (err) {
+    console.error('Error generating QR code and saving URL:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for retrieving the QR code image (GET request)
+/**
+ * @swagger
+ * /get-qr:
+ *   get:
+ *     summary: Retrieve the QR code image
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         schema:
+ *           type: string
+ *         description: The URL for which to retrieve the QR code image
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the QR code image
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid URL provided
+ *       500:
+ *         description: Internal Server Error
+ */
+app.get('/get-qr', async (req, res) => {
+  const { url } = req.query;
+
+  try {
+    // Find the URL in Firestore
+    const snapshot = await qrCollection.where('url', '==', url).get();
+
+    if (snapshot.empty) {
+      return res.status(400).json({ error: 'Invalid URL' });
+    }
+
+    // Generate QR code image
+    const qr_svg = qr.image(url, { type: 'png' });
+
+    // Set the Content-Type header to 'image/png'
+    res.setHeader('Content-Type', 'image/png');
+
+    // Pipe the QR code image to the response
+    qr_svg.pipe(res);
+  } catch (error) {
+    console.error('Error retrieving QR code:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for deleting the QR code image and URL (DELETE request)
+/**
+ * @swagger
+ * /delete-qr:
+ *   delete:
+ *     summary: Delete the QR code image and URL
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         schema:
+ *           type: string
+ *         description: The URL for the QR code to delete
+ *     responses:
+ *       200:
+ *         description: QR code, URL, and record deleted successfully
+ *       400:
+ *         description: Invalid URL provided
+ *       404:
+ *         description: URL not found
+ *       500:
+ *         description: Internal Server Error
+ */
+app.delete('/delete-qr', async (req, res) => {
+  const { url } = req.query;
+
+  try {
+    // Find and delete the document from Firestore
+    const snapshot = await qrCollection.where('url', '==', url).get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ error: 'URL not found' });
+    }
+
+    const docId = snapshot.docs[0].id;
+    await qrCollection.doc(docId).delete();
+
+    res.json({ success: true, message: 'QR code, URL, and record deleted!' });
+  } catch (error) {
+    console.error('Error deleting QR code:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Endpoint for retrieving the QR code image (GET request)
+/**
+ * @swagger
+ * /get-qr:
+ *   get:
+ *     summary: Retrieve the QR code image
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         schema:
+ *           type: string
+ *         description: The URL for which to retrieve the QR code image
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the QR code image
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid URL provided
+ *       500:
+ *         description: Internal Server Error
+ */
+app.get('/get-qr', async (req, res) => {
+  const { url } = req.query;
+
+  try {
+    // Find the URL in MongoDB
+    const result = await QRModel.findOne({ url });
+
+    if (!result) {
+      return res.status(400).json({ error: 'Invalid URL' });
+    }
+
+     // Update the last retrieved timestamp
+     result.lastRetrievedTimestamp = new Date();
+     await result.save();
+
+    // Set the Content-Type header to 'image/png'
+    res.setHeader('Content-Type', 'image/png');
+
+    // Send the QR code image
+    res.send(result.qrCode);
+  } catch (error) {
+    console.error('Error retrieving QR code:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+
+
+
+
+
+make HTTP requests to it from your Node.js application.using the axios library for making HTTP requests:
+npm install axios
+Then, you can create a function to check the safety of a URL:
+const axios = require('axios');
+
+async function checkUrlSafety(url) {
+    const API_KEY = 'YOUR_API_KEY'; // Replace with your actual API key
+    const API_URL = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
+
+    try {
+        const response = await axios.post(API_URL, {
+            client: {
+                clientId: 'YourCompany',
+                clientVersion: '1.0.0'
+            },
+            threatInfo: {
+                threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING'],
+                platformTypes: ['ANY_PLATFORM'],
+                threatEntryTypes: ['URL'],
+                threatEntries: [{ 'url': url }]
+            }
+        }, {
+            params: { key: API_KEY }
+        });
+
+        if (response.data.matches && response.data.matches.length > 0) {
+            return { safe: false, matches: response.data.matches };
+        } else {
+            return { safe: true };
+        }
+    } catch (error) {
+        console.error('Error checking URL safety:', error);
+        return { safe: false, error: error.message };
+    }
+}
+
+Replace 'YOUR_API_KEY' with your actual API key for the Google Safe Browsing API. This function takes a URL as input and returns an object indicating whether the URL is safe or not, along with any matches found (if applicable).
+
+You can then integrate this function into your API code where you generate QR codes. For example:
+
+// Assuming you have an endpoint for generating QR codes
+app.post('/generateQR', async (req, res) => {
+    const url = req.body.url;
+
+    // Check URL safety
+    const safetyResult = await checkUrlSafety(url);
+    if (!safetyResult.safe) {
+        return res.status(400).json({ error: 'Unsafe URL detected', matches: safetyResult.matches });
+    }
+
+    // Generate QR code
+    // Your QR code generation code goes here
+
+    res.send('QR code generated successfully');
+});
+
+
+Google Safe Browsing API:
+
+Go to the Google Cloud Console.
+Create a new project or select an existing one.
+Enable the Google Safe Browsing API for your project.
+Go to the "APIs & Services" -> "Credentials" page.
+Click on "Create credentials" and select "API key".
+Copy the generated API key.
+
+AIzaSyCoBVOMzDrxLK9js8z6hNqINBFHpV7rQK4
+
+
+import express from 'express';
+import validator from 'validator';
+import qr from 'qr-image';
+import swaggerUI from 'swagger-ui-express';
+import swaggerSpec from './swagger-config.js';
+import mongoose from 'mongoose';
+import axios from 'axios';
+
+const app = express();
+const port = 5000;
+
+// Connect to MongoDB using Mongoose
+mongoose.connect('mongodb://localhost:27017/generate_qr', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+// Define the schema for QR data
+const qrSchema = new mongoose.Schema({
+  url: {
+    type: String,
+    required: true,
+    validate: {
+      validator: (value) => validator.isURL(value),
+      message: 'Invalid URL',
+    },
+  },
+  firstGeneratedTimestamp: {
+    type: Date,
+    default: Date.now,
+  },
+  lastRetrievedTimestamp: {
+    type: Date,
+  },
+  qrCode: {
+    type: Buffer,
+  },
+});
+
+// Create a Mongoose model based on the schema
+const QRModel = mongoose.model('QRModel', qrSchema);
+
+app.use(express.json());
+
+// Function to check URL safety using Google Safe Browsing API
+async function checkUrlSafety(url) {
+  const API_KEY = 'YOUR_API_KEY'; // Replace with your actual API key
+  const API_URL = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
+
+  try {
+    const response = await axios.post(API_URL, {
+      client: {
+        clientId: 'YourCompany',
+        clientVersion: '1.0.0'
+      },
+      threatInfo: {
+        threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING'],
+        platformTypes: ['ANY_PLATFORM'],
+        threatEntryTypes: ['URL'],
+        threatEntries: [{ 'url': url }]
+      }
+    }, {
+      params: { key: API_KEY }
+    });
+
+    if (response.data.matches && response.data.matches.length > 0) {
+      return { safe: false, matches: response.data.matches };
+    } else {
+      return { safe: true };
+    }
+  } catch (error) {
+    console.error('Error checking URL safety:', error);
+    return { safe: false, error: error.message };
+  }
+}
+
+// Endpoint for generating QR code or retrieving existing QR code (POST request)
+app.post('/generate-qr', async (req, res) => {
+  const { url } = req.body;
+
+  try {
+    // Check URL safety
+    const safetyResult = await checkUrlSafety(url);
+    if (!safetyResult.safe) {
+      return res.status(400).json({ error: 'Unsafe URL detected', matches: safetyResult.matches });
+    }
+
+    // Check if the URL is already present in MongoDB
+    let existingQR = await QRModel.findOne({ url });
+
+    if (!existingQR) {
+      // Generate QR code if the URL is not found
+      const qrCodeBuffer = qr.imageSync(url, { type: 'png' });
+
+      // Create a new QRModel instance
+      existingQR = new QRModel({ url, qrCode: qrCodeBuffer });
+
+      await existingQR.validate();
+      await existingQR.save();
+
+      // URL found, guide the user to use the /get-qr endpoint
+      res.set('Content-Type', 'image/png');
+      return res.status(200).send(qrCodeBuffer);
+    }
+
+    existingQR.lastRetrievedTimestamp = new Date();
+    // Save data to MongoDB
+    await existingQR.save();
+
+    res.set('Content-Type', 'image/png');
+    res.status(200).send(existingQR.qrCode);
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      // Mongoose validation error
+      return res.status(400).json({ error: 'Invalid URL' });
+    }
+    console.error('Error generating or retrieving QR code:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for deleting the QR code image and URL (DELETE request)
+app.delete('/delete-qr', async (req, res) => {
+  const { url } = req.query;
+
+  try {
+    // Find and delete the document from MongoDB
+    const result = await QRModel.findOneAndDelete({ url });
+
+    if (!result) {
+      return res.status(404).json({ error: 'URL not found' });
+    }
+
+    res.json({ success: true, message: 'QR code, URL, and record deleted!' });
+  } catch (error) {
+    console.error('Error deleting QR code:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
