@@ -1,5 +1,4 @@
-//const swaggerJsdoc = require('swagger-jsdoc');
-import swaggerJsdoc from 'swagger-jsdoc'; //used to generate Swagger documentation from JSDoc comments in your code
+const swaggerJsdoc = require('swagger-jsdoc'); //used to generate Swagger documentation from JSDoc comments in your code
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
@@ -13,5 +12,5 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-export default swaggerSpec;
-// module.exports = swaggerSpec;
+//export default swaggerSpec;
+module.exports = swaggerSpec;

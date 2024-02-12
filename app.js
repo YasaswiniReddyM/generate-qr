@@ -1,11 +1,11 @@
-import express from 'express';
-import validator from 'validator';
-import qr from 'qr-image';
-import swaggerUI from 'swagger-ui-express';
-import swaggerSpec from './swagger-config.js';
-import mongoose from './dist/mongoose';
-import axios from 'axios';
-import cors from 'cors';
+const express = require('express');
+const validator = require('validator');
+const qr = require('qr-image');
+const swaggerUI = require('swagger-ui-express');
+const swaggerSpec = require('./swagger-config.js');
+const mongoose = require('mongoose');
+const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -14,7 +14,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 
 // Connect to MongoDB using Mongoose
-mongoose.connect('mongodb+srv://yasaswini:yasaswini@cluster0.4fwjmxp.mongodb.net/generate_qr?retryWrites=true&w=majority', { //mongodb://localhost:27017/generate_qr
+mongoose.connect('mongodb+srv://yasaswini:yasaswini@cluster0.4fwjmxp.mongodb.net/generate_qr?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -29,8 +29,6 @@ const qrSchema = new mongoose.Schema({
       message: 'Invalid URL',
     },
   },
-  //timestamp: { type: Date, default: Date.now, },
-  //timestamps: [Date],
   firstGeneratedTimestamp: {
     type: Date,
     default: Date.now,
@@ -39,7 +37,7 @@ const qrSchema = new mongoose.Schema({
     type: Date,
   },
   qrCode: {
-    type: Buffer, //. Buffers are Node.js' way of handling binary data.
+    type: Buffer,
   },
 });
 
@@ -50,7 +48,7 @@ app.use(express.json());
 
 // Function to check URL safety using Google Safe Browsing API
 async function checkUrlSafety(url) {
-  const API_KEY = 'AIzaSyClayvI9VNDzdqvii2zZU4JVD7Z0MP5Wf0'; 
+  const API_KEY = 'AIzaSyClayvI9VNDzdqvii2zZU4JVD7Z0MP5Wf0';
   const API_URL = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
 
   try {
@@ -201,6 +199,3 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
-
-
