@@ -27,7 +27,7 @@ jobs:
 
       - name: Run unit tests with environment variables
         env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           SAFE_BROWSING_API_KEY: ${{ secrets.SAFE_BROWSING_API_KEY }}
         run: npm test
 
