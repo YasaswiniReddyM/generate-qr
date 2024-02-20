@@ -31,9 +31,6 @@ jobs:
           SAFE_BROWSING_API_KEY: ${{ secrets.SAFE_BROWSING_API_KEY }}
         run: npm test
 
-      - name: Run unit tests
-        run: npm test
-
       # Define deployment steps
       # - name: Build Docker image
       #   run: docker build -t generate-qr .
