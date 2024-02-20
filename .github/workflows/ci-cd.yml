@@ -1,0 +1,43 @@
+name: CI/CD Pipeline
+
+# Define triggers for the workflow
+on:
+  push:
+    branches:
+      - main  # Run on push to main branch
+  pull_request:
+    branches:
+      - main  # Run on pull requests to main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Define build steps
+      - name: Install Node.js dependencies
+        run: npm install
+
+      # Define test steps
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test
+
+      # Define deployment steps
+      - name: Build Docker image
+        run: docker build -t generate-qr:latest .
+      
+      - name: Push Docker image to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Push Docker image
+        run: docker push generate-qr:latest
+      
