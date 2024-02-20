@@ -48,7 +48,7 @@ app.use(express.json());
 
 // Function to check URL safety using Google Safe Browsing API
 async function checkUrlSafety(url) {
-  const API_KEY = process.env.SAFE_BROWSING_API_KEY;;
+  const API_KEY = process.env.SAFE_BROWSING_API_KEY;
   const API_URL = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
 
   try {
