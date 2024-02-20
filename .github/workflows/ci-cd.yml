@@ -25,6 +25,12 @@ jobs:
       - name: Run linting
         run: npm run lint
 
+      - name: Run unit tests with environment variables
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SAFE_BROWSING_API_KEY: ${{ secrets.SAFE_BROWSING_API_KEY }}
+        run: npm test
+
       - name: Run unit tests
         run: npm test
 
@@ -64,4 +70,3 @@ jobs:
           push: true
           target: prod
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}:latest
-      
