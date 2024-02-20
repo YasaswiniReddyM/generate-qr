@@ -14,7 +14,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 
 // Connect to MongoDB using Mongoose
-mongoose.connect('mongodb+srv://yasaswini:yasaswini@cluster0.4fwjmxp.mongodb.net/generate_qr?retryWrites=true&w=majority', {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -48,7 +48,7 @@ app.use(express.json());
 
 // Function to check URL safety using Google Safe Browsing API
 async function checkUrlSafety(url) {
-  const API_KEY = 'AIzaSyD2qwwfhV3rJXcB1T9z6Eg2UneFXDG1kqM';
+  const API_KEY = process.env.SAFE_BROWSING_API_KEY;;
   const API_URL = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
 
   try {
