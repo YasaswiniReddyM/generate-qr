@@ -43,3 +43,8 @@ CMD ["npm", "start"]
 # Stage 2: Test stage
 FROM builder AS test
 # Add any test-related configurations or commands here
+
+# Stage 3: Production stage
+FROM builder AS prod
+# Define any production-specific configurations or optimizations here
+
