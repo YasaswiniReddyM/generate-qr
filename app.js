@@ -48,7 +48,7 @@ app.use(express.json());
 
 // Function to check URL safety using Google Safe Browsing API
 async function checkUrlSafety(url) {
-  const API_KEY = 'AIzaSyClayvI9VNDzdqvii2zZU4JVD7Z0MP5Wf0';
+  const API_KEY = 'AIzaSyD2qwwfhV3rJXcB1T9z6Eg2UneFXDG1kqM';
   const API_URL = 'https://safebrowsing.googleapis.com/v4/threatMatches:find';
 
   try {
@@ -75,6 +75,16 @@ async function checkUrlSafety(url) {
   } catch (error) {
     console.error('Error checking URL safety:', error);
     return { safe: false, error: error.message };
+  }
+}
+
+// Function to validate URL existence online
+async function validateUrlExists(url) {
+  try {
+    const response = await axios.head(url);
+    return response.status === 200;
+  } catch (error) {
+    return false; // If there's an error, assume the URL does not exist
   }
 }
 
@@ -117,6 +127,12 @@ app.post('/generate-qr', async (req, res) => {
       return res.status(400).json({ error: 'Unsafe URL detected', matches: safetyResult.matches });
     }
 
+    // Validate URL existence
+    const urlExists = await validateUrlExists(url);
+    if (!urlExists) {
+      return res.status(400).json({ error: 'URL does not exist' });
+    }
+
     // Check if the URL is already present in MongoDB
     let existingQR = await QRModel.findOne({ url });
 
@@ -136,7 +152,7 @@ app.post('/generate-qr', async (req, res) => {
       return res.status(200).send(qrCodeBuffer);
     }
 
-    existingQR.lastRetrievedTimestamp = new Date();
+    //existingQR.lastRetrievedTimestamp = new Date();
     // Save data to MongoDB
     await existingQR.save();
 
@@ -199,3 +215,5 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+module.exports = app;
